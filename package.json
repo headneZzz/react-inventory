@@ -7,7 +7,8 @@
     "axios": "0.19.2",
     "material-table": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "node": "latest"
   },
   "scripts": {
     "start": "react-scripts start",
