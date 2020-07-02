@@ -39,11 +39,14 @@ export default class App extends React.Component {
                 resolve();
                 this.setState((prevState) => {
                     const data = [...prevState.data];
-                    axios.post("http://localhost:8080/insert", newData)
+                    axios.post("http://localhost:8080/save", newData)
+                        .then(() => {
+                            data.push(newData);
+                        })
                         .catch((error) => {
                             alert(error);
                         });
-                        data.push(newData);
+
                     return {...prevState, data};
                 });
             }, 600);
@@ -57,7 +60,13 @@ export default class App extends React.Component {
                 if (oldData) {
                     this.setState((prevState) => {
                         const data = [...prevState.data];
-                        data[data.indexOf(oldData)] = newData;
+                        axios.post("http://localhost:8080/save", newData)
+                            .then(() => {
+                                data[data.indexOf(oldData)] = newData;
+                            })
+                            .catch((error) => {
+                                alert(error);
+                            });
                         return {...prevState, data};
                     });
                 }
@@ -69,17 +78,26 @@ export default class App extends React.Component {
         return new Promise((resolve) => {
             setTimeout(() => {
                 resolve();
-                this.setState((prevState) => {
-                    const data = [...prevState.data];
-                    data.splice(data.indexOf(oldData), 1);
-                    return {...prevState, data};
-                });
+                const data = [...this.state.data];
+                axios.delete("http://localhost:8080/delete",
+                    {params: {
+                            id: oldData.id
+                        }})
+                    .then(() => {
+                        data.splice(data.indexOf(oldData), 1);
+                    })
+                    .catch((error) => {
+                        alert(error);
+                    });
+                this.setState((prevState) => {return {...prevState, data}});
             }, 600);
         })
     };
 
     render() {
-        console.log(2);
+        const tableRef = React.createRef();
+        console.log(1);
+
         return (
             <MaterialTable
                 title="Инвентаризация"

@@ -1,20 +1,22 @@
 {
   "name": "material-demo",
-  "version": "0.0.0",
-  "title": "Material demo",
+  "version": "0.1.0",
   "dependencies": {
     "@material-ui/core": "4.10.2",
     "axios": "0.19.2",
-    "material-table": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "node": "latest"
+    "material-table": "1.63.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-scripts": "3.4.1"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
+    "test": "react-scripts test",
     "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
   },
   "browserslist": {
     "production": [
