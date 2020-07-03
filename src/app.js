@@ -13,7 +13,18 @@ export default class App extends React.Component {
         this.state = {
             columns: [
                 {title: 'Номер', field: 'id'},
-                {title: 'Тип', field: 'type'},
+                {
+                    title: 'Тип',
+                    field: 'type',
+                    lookup: {
+                        "PC": "Системный блок",
+                        "MONITOR": "Монитор",
+                        "PRINTER": "Принтер",
+                        "UPS": "ИБП",
+                        "SCANNER": "Сканнер",
+                        "ANOTHER": "Другое"
+                    }
+                },
                 {title: 'Кабинет', field: 'location', type: 'numeric'},
                 {title: 'Наименование', field: 'name'},
                 {title: 'Дата приобретения', field: 'purchaseDate', type: 'date'},
@@ -34,21 +45,25 @@ export default class App extends React.Component {
     };
 
     rowAdd = (newData) => {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             setTimeout(() => {
-                resolve();
-                this.setState((prevState) => {
-                    const data = [...prevState.data];
+                if (newData.id == null) {
+                    alert("Введите номер");
+                    reject();
+                } else {
+                    resolve();
+                    const data = [...this.state.data];
                     axios.post("http://localhost:8080/save", newData)
                         .then(() => {
                             data.push(newData);
+                            this.setState((prevState) => {
+                                return {...prevState, data}
+                            })
                         })
                         .catch((error) => {
                             alert(error);
                         });
-
-                    return {...prevState, data};
-                });
+                }
             }, 600);
         })
     };
@@ -58,17 +73,17 @@ export default class App extends React.Component {
             setTimeout(() => {
                 resolve();
                 if (oldData) {
-                    this.setState((prevState) => {
-                        const data = [...prevState.data];
-                        axios.post("http://localhost:8080/save", newData)
-                            .then(() => {
-                                data[data.indexOf(oldData)] = newData;
+                    const data = [...this.state.data];
+                    axios.post("http://localhost:8080/save", newData)
+                        .then(() => {
+                            data[data.indexOf(oldData)] = newData;
+                            this.setState((prevState) => {
+                                return {...prevState, data}
                             })
-                            .catch((error) => {
-                                alert(error);
-                            });
-                        return {...prevState, data};
-                    });
+                        })
+                        .catch((error) => {
+                            alert(error);
+                        });
                 }
             }, 600);
         })
@@ -80,24 +95,35 @@ export default class App extends React.Component {
                 resolve();
                 const data = [...this.state.data];
                 axios.delete("http://localhost:8080/delete",
-                    {params: {
+                    {
+                        params: {
                             id: oldData.id
-                        }})
+                        }
+                    })
                     .then(() => {
                         data.splice(data.indexOf(oldData), 1);
+                        this.setState((prevState) => {
+                            return {...prevState, data}
+                        });
                     })
                     .catch((error) => {
                         alert(error);
                     });
-                this.setState((prevState) => {return {...prevState, data}});
             }, 600);
         })
     };
 
-    render() {
-        const tableRef = React.createRef();
-        console.log(1);
+    rowHistory = (rowData) => {
+        return (
+            <div>
+                <h2>История</h2>
+                <h4>Предыдущий кабинет: {rowData.previousLocation}</h4>
+                <h4>Исполнитель: {rowData.actionee}</h4>
+            </div>
+        )
+    };
 
+    render() {
         return (
             <MaterialTable
                 title="Инвентаризация"
@@ -105,7 +131,8 @@ export default class App extends React.Component {
                 data={this.state.data}
                 options={
                     {
-                        pageSize: 10
+                        pageSize: 10,
+                        addRowPosition: "first"
                     }
                 }
                 editable={{
@@ -113,7 +140,7 @@ export default class App extends React.Component {
                     onRowUpdate: (newData, oldData) => this.rowUpdate(newData, oldData),
                     onRowDelete: (oldData) => this.rowDelete(oldData)
                 }}
-
+                detailPanel={this.rowHistory}
                 localization={
                     {
                         toolbar: {
@@ -127,7 +154,7 @@ export default class App extends React.Component {
                             editTooltip: 'Изменить',
                             deleteTooltip: 'Удалить',
                             editRow: {
-                                deleteText: 'Вы точно хотите удалить эту строчку?',
+                                deleteText: 'Вы уверены?',
                                 cancelTooltip: 'Отмена',
                                 saveTooltip: 'Подтвердить'
                             }
