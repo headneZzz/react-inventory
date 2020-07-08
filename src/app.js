@@ -12,7 +12,7 @@ export default class App extends React.Component {
         super(props);
         this.state = {
             columns: [
-                {title: 'Номер', field: 'id'},
+                {title: 'Номер', field: 'id', editable: 'onAdd'},
                 {
                     title: 'Тип',
                     field: 'type',
@@ -50,9 +50,13 @@ export default class App extends React.Component {
                 if (newData.id == null) {
                     alert("Введите номер");
                     reject();
+                } else if (this.state.data.some(el => el.id === newData.id)) {
+                    alert("Такой номер уже есть");
+                    reject();
                 } else {
                     resolve();
                     const data = [...this.state.data];
+                    Object.assign(newData, {history: []});
                     axios.post("http://localhost:8080/save", newData)
                         .then(() => {
                             data.push(newData);
@@ -68,7 +72,30 @@ export default class App extends React.Component {
         })
     };
 
+    getDiff = (newData, oldData) => {
+        let difference = "";
+        if (newData.type !== oldData.type) {
+            difference += " | Тип: " + oldData.type + " => " + newData.type
+        }
+        if (newData.location !== oldData.location) {
+            difference += " | Кабинет: " + oldData.location + " => " + newData.location
+        }
+        if (newData.name !== oldData.name) {
+            difference += " | Наименование: " + oldData.name + " => " + newData.name
+        }
+        if (newData.working !== oldData.working) {
+            difference += " | Состояние: " + oldData.working + " => " + newData.working
+        }
+        return difference;
+    };
+
     rowUpdate = (newData, oldData) => {
+        newData.history.unshift(
+            {
+                action: this.getDiff(newData, oldData),
+                actionee: "Админ",
+                actionDate: new Date()
+            });
         return new Promise((resolve) => {
             setTimeout(() => {
                 resolve();
@@ -114,13 +141,26 @@ export default class App extends React.Component {
     };
 
     rowHistory = (rowData) => {
-        return (
-            <div>
-                <h2>История</h2>
-                <h4>Предыдущий кабинет: {rowData.previousLocation}</h4>
-                <h4>Исполнитель: {rowData.actionee}</h4>
-            </div>
-        )
+        console.log(rowData);
+        if (rowData.history.length === 0) {
+            return (
+                <div style={{padding: '10px 50px 10px 50px', background: "#c3dfff"}}>
+                    <h2>История:</h2>
+                    <hr/>
+                    <h4>Пока изменений нет</h4>
+                </div>
+            )
+        } else {
+            return (
+                <div style={{padding: '10px 50px 10px 50px', background: "#c3dfff"}}>
+                    <h2>История:</h2>
+                    <hr/>
+                    <h4>Изменения: <br/> {rowData.history[0].action}</h4>
+                    <h4>Исполнитель: {rowData.history[0].actionee}</h4>
+                    <h4>Дата: {rowData.history[0].actionDate.toString()}</h4>
+                </div>
+            )
+        }
     };
 
     render() {
