@@ -1,9 +1,12 @@
 import React from 'react';
 import MaterialTable from 'material-table';
-import axios from "axios";
+import jsPDF from "jspdf"
+import {CsvBuilder} from "filefy";
+import firestore from "./firestore";
 
+export default class MainTablePage extends React.Component {
+    db = firestore.firestore();
 
-export default class App extends React.Component {
     componentDidMount() {
         this.getItems();
     }
@@ -34,14 +37,23 @@ export default class App extends React.Component {
         }
     }
 
-    getItems = () => {
-        axios.get("http://localhost:8080/get_all_items")
-            .then((response) => {
-                this.setState({data: response.data});
-            })
-            .catch((error) => {
-                console.log(error);
+    getItems = async () => {
+        const items = [];
+        this.db.collection("items").get().then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                items.push({"id": doc.id, ...doc.data()})
             });
+            this.setState({data: items})
+        }).catch((error) => {
+            alert(error)
+        });
+    };
+
+    convertDate = (date) => {
+        function pad(s) {
+            return (s < 10) ? '0' + s : s;
+        }
+        return [pad(date.getDate()), pad(date.getMonth() + 1), date.getFullYear()].join('.');
     };
 
     rowAdd = (newData) => {
@@ -53,20 +65,22 @@ export default class App extends React.Component {
                 } else if (this.state.data.some(el => el.id === newData.id)) {
                     alert("Такой номер уже есть");
                     reject();
+                } else if (newData.purchaseDate === undefined) {
+                    alert("Введите дату приобретения");
+                    reject();
                 } else {
-                    resolve();
                     const data = [...this.state.data];
                     Object.assign(newData, {history: []});
-                    axios.post("http://localhost:8080/save", newData)
-                        .then(() => {
-                            data.push(newData);
-                            this.setState((prevState) => {
-                                return {...prevState, data}
-                            })
+                    newData.purchaseDate = this.convertDate(newData.purchaseDate);
+                    const {id, ...newDataWithoutId} = newData;
+                    this.db.collection("items").doc(newData.id).set({...newDataWithoutId}).then(() => {
+                        console.log(newData);
+                        data.push(newData);
+                        this.setState((prevState) => {
+                            return {...prevState, data}
                         })
-                        .catch((error) => {
-                            alert(error);
-                        });
+                    }).catch((error) => alert(error));
+                    resolve();
                 }
             }, 600);
         })
@@ -94,23 +108,23 @@ export default class App extends React.Component {
             {
                 action: this.getDiff(newData, oldData),
                 actionee: "Админ",
-                actionDate: new Date()
+                actionDate: this.convertDate(new Date())
             });
         return new Promise((resolve) => {
             setTimeout(() => {
                 resolve();
                 if (oldData) {
                     const data = [...this.state.data];
-                    axios.post("http://localhost:8080/save", newData)
-                        .then(() => {
-                            data[data.indexOf(oldData)] = newData;
-                            this.setState((prevState) => {
-                                return {...prevState, data}
-                            })
+                    if(typeof newData.purchaseDate.getMonth === "function") {
+                        newData.purchaseDate = this.convertDate(newData.purchaseDate);
+                    }
+                    const {id, ...newDataWithoutId} = newData;
+                    this.db.collection("items").doc(id).set({...newDataWithoutId}).then(() => {
+                        data[data.indexOf(oldData)] = newData;
+                        this.setState((prevState) => {
+                            return {...prevState, data}
                         })
-                        .catch((error) => {
-                            alert(error);
-                        });
+                    }).catch((error) => alert(error));
                 }
             }, 600);
         })
@@ -121,21 +135,12 @@ export default class App extends React.Component {
             setTimeout(() => {
                 resolve();
                 const data = [...this.state.data];
-                axios.delete("http://localhost:8080/delete",
-                    {
-                        params: {
-                            id: oldData.id
-                        }
-                    })
-                    .then(() => {
-                        data.splice(data.indexOf(oldData), 1);
-                        this.setState((prevState) => {
-                            return {...prevState, data}
-                        });
-                    })
-                    .catch((error) => {
-                        alert(error);
+                this.db.collection("items").doc(oldData.id).delete().then(() => {
+                    data.splice(data.indexOf(oldData), 1);
+                    this.setState((prevState) => {
+                        return {...prevState, data}
                     });
+                }).catch((error) => alert(error));
             }, 600);
         })
     };
@@ -163,6 +168,89 @@ export default class App extends React.Component {
         }
     };
 
+    byString = (o, s) => {
+        if (!s) {
+            return;
+        }
+
+        s = s.replace(/\[(\w+)\]/g, ".$1");
+        s = s.replace(/^\./, "");
+        const a = s.split(".");
+        let i = 0, n = a.length;
+        for (; i < n; ++i) {
+            const x = a[i];
+            if (o && x in o) {
+                o = o[x];
+            } else {
+                return;
+            }
+        }
+        return o;
+    };
+
+    getFieldValue = (rowData, columnDef, lookup = true) => {
+        let value =
+            typeof rowData[columnDef.field] !== "undefined"
+                ? rowData[columnDef.field]
+                : this.byString(rowData, columnDef.field);
+        if (columnDef.lookup && lookup) {
+            value = columnDef.lookup[value];
+        }
+
+        return value;
+    };
+
+    getTableData = () => {
+        const columns = this.state.columns
+            .filter(
+                (columnDef) =>
+                    !columnDef.hidden && columnDef.field && columnDef.export !== false
+            )
+            .sort((a, b) =>
+                a.tableData.columnOrder > b.tableData.columnOrder ? 1 : -1
+            );
+        const data = (this.state.data
+        ).map((rowData) =>
+            columns.map((columnDef) => this.getFieldValue(rowData, columnDef))
+        );
+
+        return [columns, data];
+    };
+
+    exportCsv = () => {
+        const [columns, data] = this.getTableData();
+        console.log(columns);
+        console.log(data);
+        const builder = new CsvBuilder("Инвентаризация.csv");
+        builder
+            .setColumns(columns.map((columnDef) => columnDef.title))
+            .addRows(data)
+            .exportFile();
+    };
+
+    exportPdf = () => {
+        const data = this.state.data;
+        const columns = this.state.columns;
+
+        let content = {
+            startY: 50,
+            head: [columns.map((columnDef) => columnDef.title)],
+            body: data,
+        };
+
+        const unit = "pt";
+        const size = "A4";
+        const orientation = "landscape";
+
+        const doc = new jsPDF(orientation, unit, size);
+        doc.setFontSize(15);
+        doc.text("Инвентаризация", 40, 40);
+        doc.autoTable(content);
+        doc.save(
+            (this.props.exportFileName || this.props.title || "data") + ".pdf"
+        );
+    };
+
     render() {
         return (
             <MaterialTable
@@ -172,9 +260,16 @@ export default class App extends React.Component {
                 options={
                     {
                         pageSize: 10,
-                        addRowPosition: "first"
-                    }
-                }
+                        addRowPosition: "first",
+                        filtering: true,
+                        exportButton: true,
+                        exportAllData: true,
+                        exportCsv: (columns, renderData) => this.exportCsv(),
+                        exportPdf: () => {
+                            alert("В разработке")
+                        }
+
+                    }}
                 editable={{
                     onRowAdd: (newData) => this.rowAdd(newData),
                     onRowUpdate: (newData, oldData) => this.rowUpdate(newData, oldData),
@@ -186,11 +281,15 @@ export default class App extends React.Component {
                         toolbar: {
                             searchPlaceholder: 'Поиск',
                             searchTooltip: 'Поиск',
+                            exportTitle: 'Экспорт',
+                            exportCSVName: 'Экспорт в CSV',
+                            exportPDFName: 'Экспорт в PDF'
                         },
                         header: {
                             actions: 'Действия'
                         },
                         body: {
+                            addTooltip: 'Добавить',
                             editTooltip: 'Изменить',
                             deleteTooltip: 'Удалить',
                             editRow: {
