@@ -1,7 +1,11 @@
 import React from "react";
 import {Button, Form, Container, Jumbotron} from "react-bootstrap";
+import firestore from "./firestore";
+import {setUserSession} from "./SessionUtils";
 
 export default class LoginPage extends React.Component {
+    db = firestore.firestore();
+
     constructor(props) {
         super(props);
         this.state = {
@@ -16,6 +20,18 @@ export default class LoginPage extends React.Component {
 
     handleSubmit = (event) => {
         event.preventDefault();
+        this.db.collection("users").doc(this.state.name).get().then((doc) => {
+            if ((doc.data())) {
+                if (doc.data().password === this.state.password) {
+                    const user = {...doc.data()};
+                    console.log(user);
+                    setUserSession(user);
+                    this.props.history.push('/main')
+                }
+            }
+        }).catch((error) => {
+            alert(error)
+        })
     };
 
     render() {
