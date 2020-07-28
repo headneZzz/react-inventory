@@ -1,6 +1,6 @@
 import React from 'react';
 import { Route, Redirect } from 'react-router-dom';
-import { getUser } from './SessionUtils';
+import { getUser } from '../utils/sessionUtils';
 
 function PrivateRoute({ component: Component, ...rest }) {
     return (

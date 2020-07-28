@@ -12,7 +12,8 @@
     "jspdf-autotable": "3.5.3",
     "material-table": "1.65.0",
     "react": "^16.13.1",
-    "react-bootstrap": "^1.2.2",
+    "antd": "^4.5.1",
+    "@ant-design/icons": "latest",
     "react-dom": "^16.13.1",
     "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.1"

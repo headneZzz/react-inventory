@@ -1,10 +1,11 @@
 import React from 'react';
 import MaterialTable from 'material-table';
-import jsPDF from "jspdf"
-import {CsvBuilder} from "filefy";
-import firestore from "./firestore";
+import firestore from "../firestore";
+import {getUser} from "../utils/sessionUtils";
+import localization from "../utils/localization";
+import {exportCsv} from "../utils/tableUtils";
 
-export default class MainTablePage extends React.Component {
+export default class AdminTablePage extends React.Component {
     db = firestore.firestore();
 
     componentDidMount() {
@@ -33,26 +34,33 @@ export default class MainTablePage extends React.Component {
                 {title: 'Дата приобретения', field: 'purchaseDate', type: 'date'},
                 {title: 'Состояние', field: 'working', type: 'boolean'},
             ],
-            data: []
+            data: [],
+            user: getUser()
         }
     }
 
     getItems = async () => {
         const items = [];
-        this.db.collection("items").get().then((querySnapshot) => {
-            querySnapshot.forEach((doc) => {
-                items.push({"id": doc.id, ...doc.data()})
+        if (this.state.user.type === "user") {
+            //FIXME не работает
+            //this.props.history.push('/user')
+        } else {
+            this.db.collection("items").get().then((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    items.push({"id": doc.id, ...doc.data()})
+                });
+                this.setState({data: items})
+            }).catch((error) => {
+                alert(error)
             });
-            this.setState({data: items})
-        }).catch((error) => {
-            alert(error)
-        });
+        }
     };
 
     convertDate = (date) => {
         function pad(s) {
             return (s < 10) ? '0' + s : s;
         }
+
         return [pad(date.getDate()), pad(date.getMonth() + 1), date.getFullYear()].join('.');
     };
 
@@ -115,7 +123,7 @@ export default class MainTablePage extends React.Component {
                 resolve();
                 if (oldData) {
                     const data = [...this.state.data];
-                    if(typeof newData.purchaseDate.getMonth === "function") {
+                    if (typeof newData.purchaseDate.getMonth === "function") {
                         newData.purchaseDate = this.convertDate(newData.purchaseDate);
                     }
                     const {id, ...newDataWithoutId} = newData;
@@ -149,107 +157,26 @@ export default class MainTablePage extends React.Component {
         console.log(rowData);
         if (rowData.history.length === 0) {
             return (
-                <div style={{padding: '10px 50px 10px 50px', background: "#c3dfff"}}>
-                    <h2>История:</h2>
+                <div style={{padding: '20px 50px 20px 50px', background: "#c3dfff"}}>
+                    <h4>История:</h4>
                     <hr/>
-                    <h4>Пока изменений нет</h4>
+                    <h6>Пока изменений нет</h6>
                 </div>
             )
         } else {
             return (
-                <div style={{padding: '10px 50px 10px 50px', background: "#c3dfff"}}>
-                    <h2>История:</h2>
+                <div style={{padding: '20px 50px 20px 50px', background: "#c3dfff"}}>
+                    <h4>История:</h4>
                     <hr/>
-                    <h4>Изменения: <br/> {rowData.history[0].action}</h4>
-                    <h4>Исполнитель: {rowData.history[0].actionee}</h4>
-                    <h4>Дата: {rowData.history[0].actionDate.toString()}</h4>
+                    <h6>Изменения: <br/> {rowData.history[0].action}</h6>
+                    <h6>Исполнитель: {rowData.history[0].actionee}</h6>
+                    <h6>Дата: {rowData.history[0].actionDate.toString()}</h6>
                 </div>
             )
         }
     };
 
-    byString = (o, s) => {
-        if (!s) {
-            return;
-        }
 
-        s = s.replace(/\[(\w+)\]/g, ".$1");
-        s = s.replace(/^\./, "");
-        const a = s.split(".");
-        let i = 0, n = a.length;
-        for (; i < n; ++i) {
-            const x = a[i];
-            if (o && x in o) {
-                o = o[x];
-            } else {
-                return;
-            }
-        }
-        return o;
-    };
-
-    getFieldValue = (rowData, columnDef, lookup = true) => {
-        let value =
-            typeof rowData[columnDef.field] !== "undefined"
-                ? rowData[columnDef.field]
-                : this.byString(rowData, columnDef.field);
-        if (columnDef.lookup && lookup) {
-            value = columnDef.lookup[value];
-        }
-
-        return value;
-    };
-
-    getTableData = () => {
-        const columns = this.state.columns
-            .filter(
-                (columnDef) =>
-                    !columnDef.hidden && columnDef.field && columnDef.export !== false
-            )
-            .sort((a, b) =>
-                a.tableData.columnOrder > b.tableData.columnOrder ? 1 : -1
-            );
-        const data = (this.state.data
-        ).map((rowData) =>
-            columns.map((columnDef) => this.getFieldValue(rowData, columnDef))
-        );
-
-        return [columns, data];
-    };
-
-    exportCsv = () => {
-        const [columns, data] = this.getTableData();
-        console.log(columns);
-        console.log(data);
-        const builder = new CsvBuilder("Инвентаризация.csv");
-        builder
-            .setColumns(columns.map((columnDef) => columnDef.title))
-            .addRows(data)
-            .exportFile();
-    };
-
-    exportPdf = () => {
-        const data = this.state.data;
-        const columns = this.state.columns;
-
-        let content = {
-            startY: 50,
-            head: [columns.map((columnDef) => columnDef.title)],
-            body: data,
-        };
-
-        const unit = "pt";
-        const size = "A4";
-        const orientation = "landscape";
-
-        const doc = new jsPDF(orientation, unit, size);
-        doc.setFontSize(15);
-        doc.text("Инвентаризация", 40, 40);
-        doc.autoTable(content);
-        doc.save(
-            (this.props.exportFileName || this.props.title || "data") + ".pdf"
-        );
-    };
 
     render() {
         return (
@@ -264,7 +191,7 @@ export default class MainTablePage extends React.Component {
                         filtering: true,
                         exportButton: true,
                         exportAllData: true,
-                        exportCsv: (columns, renderData) => this.exportCsv(),
+                        exportCsv: (columns, renderData) => exportCsv(),
                         exportPdf: () => {
                             alert("В разработке")
                         }
@@ -277,31 +204,7 @@ export default class MainTablePage extends React.Component {
                 }}
                 detailPanel={this.rowHistory}
                 localization={
-                    {
-                        toolbar: {
-                            searchPlaceholder: 'Поиск',
-                            searchTooltip: 'Поиск',
-                            exportTitle: 'Экспорт',
-                            exportCSVName: 'Экспорт в CSV',
-                            exportPDFName: 'Экспорт в PDF'
-                        },
-                        header: {
-                            actions: 'Действия'
-                        },
-                        body: {
-                            addTooltip: 'Добавить',
-                            editTooltip: 'Изменить',
-                            deleteTooltip: 'Удалить',
-                            editRow: {
-                                deleteText: 'Вы уверены?',
-                                cancelTooltip: 'Отмена',
-                                saveTooltip: 'Подтвердить'
-                            }
-                        },
-                        pagination: {
-                            labelRowsSelect: 'строк'
-                        }
-                    }
+                    localization
                 }
             />
         );
