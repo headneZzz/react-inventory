@@ -1,11 +1,10 @@
 import React from 'react';
 import MaterialTable from 'material-table';
-import firestore from "../firestore";
-import {getUser} from "../utils/sessionUtils";
 import localization from "../utils/localization";
+import firestore from "../firestore";
 import {exportCsv} from "../utils/tableUtils";
 
-export default class AdminTablePage extends React.Component {
+export default class ItemsTable extends React.Component {
     db = firestore.firestore();
 
     componentDidMount() {
@@ -35,25 +34,21 @@ export default class AdminTablePage extends React.Component {
                 {title: 'Состояние', field: 'working', type: 'boolean'},
             ],
             data: [],
-            user: getUser()
+            user: props.user
         }
     }
 
     getItems = async () => {
         const items = [];
-        if (this.state.user.type === "user") {
-            //FIXME не работает
-            //this.props.history.push('/user')
-        } else {
-            this.db.collection("items").get().then((querySnapshot) => {
-                querySnapshot.forEach((doc) => {
-                    items.push({"id": doc.id, ...doc.data()})
-                });
-                this.setState({data: items})
-            }).catch((error) => {
-                alert(error)
+        this.db.collection("items").get().then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                items.push({"id": doc.id, ...doc.data()})
             });
-        }
+            this.setState({data: items})
+        }).catch((error) => {
+            alert(error)
+        });
+
     };
 
     convertDate = (date) => {
@@ -115,7 +110,7 @@ export default class AdminTablePage extends React.Component {
         newData.history.unshift(
             {
                 action: this.getDiff(newData, oldData),
-                actionee: "Админ",
+                actionee: this.state.user,
                 actionDate: this.convertDate(new Date())
             });
         return new Promise((resolve) => {
@@ -154,39 +149,38 @@ export default class AdminTablePage extends React.Component {
     };
 
     rowHistory = (rowData) => {
-        console.log(rowData);
         if (rowData.history.length === 0) {
             return (
                 <div style={{padding: '20px 50px 20px 50px', background: "#c3dfff"}}>
-                    <h4>История:</h4>
+                    <h2>История:</h2>
                     <hr/>
-                    <h6>Пока изменений нет</h6>
+                    <h4>Пока изменений нет</h4>
                 </div>
             )
         } else {
             return (
                 <div style={{padding: '20px 50px 20px 50px', background: "#c3dfff"}}>
-                    <h4>История:</h4>
+                    <h2>История:</h2>
                     <hr/>
-                    <h6>Изменения: <br/> {rowData.history[0].action}</h6>
-                    <h6>Исполнитель: {rowData.history[0].actionee}</h6>
-                    <h6>Дата: {rowData.history[0].actionDate.toString()}</h6>
+                    <h4>Изменения: <br/> {rowData.history[0].action}</h4>
+                    <h4>Исполнитель: {rowData.history[0].actionee}</h4>
+                    <h4>Дата: {rowData.history[0].actionDate.toString()}</h4>
                 </div>
             )
         }
     };
 
 
-
     render() {
+        console.log(this.state.data);
         return (
             <MaterialTable
-                title="Инвентаризация"
+                title="Предметы"
                 columns={this.state.columns}
                 data={this.state.data}
                 options={
                     {
-                        pageSize: 10,
+                        pageSize: 5,
                         addRowPosition: "first",
                         filtering: true,
                         exportButton: true,

@@ -1,8 +1,6 @@
 import React from "react";
 import firestore from "../firestore";
 import {setUserSession} from "../utils/sessionUtils";
-import 'antd/dist/antd.css';
-import './login.css'
 import {Form, Input, Button} from 'antd';
 import {UserOutlined, LockOutlined} from '@ant-design/icons';
 
@@ -25,13 +23,15 @@ export default class LoginPage extends React.Component {
 
     render() {
         return (
-            <div className="container">
+            <div className="login-container">
                 <br/>
                 <Form
                     name="normal_login"
                     className="login-form"
                     onFinish={this.handleSubmit}
                 >
+                    <h1>Инвентаризация</h1>
+
                     <Form.Item
                         name="name"
                         rules={[
