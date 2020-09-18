@@ -110,7 +110,7 @@ export default class ItemsTable extends React.Component {
         newData.history.unshift(
             {
                 action: this.getDiff(newData, oldData),
-                actionee: this.state.user,
+                actionee: this.state.user.name,
                 actionDate: this.convertDate(new Date())
             });
         return new Promise((resolve) => {
@@ -172,7 +172,6 @@ export default class ItemsTable extends React.Component {
 
 
     render() {
-        console.log(this.state.data);
         return (
             <MaterialTable
                 title="Предметы"

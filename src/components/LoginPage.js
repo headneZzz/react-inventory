@@ -13,7 +13,7 @@ export default class LoginPage extends React.Component {
                 if (doc.data().password === values.password) {
                     const user = {"name": doc.id, ...doc.data()};
                     setUserSession(user);
-                    user.type === "admin" ? this.props.history.push('/admin') : this.props.history.push('/user')
+                    user.type === "admin" ? this.props.history.push('/') : this.props.history.push('/user')
                 }
             }
         }).catch((error) => {
