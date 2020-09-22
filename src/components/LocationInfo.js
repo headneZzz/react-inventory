@@ -11,28 +11,32 @@ export default function LocationInfo(props) {
         const temp = [];
         db.collection("2020").doc(props.location).get().then((doc) => {
             const itemsMap = doc.data().items;
-            temp.push(Object.entries(itemsMap).map(([id, status]) => {
+            temp.push(...Object.entries(itemsMap).map(([id, status]) => {
                 return {id: id, status: status}
             }));
-            setItems(temp[0]);
+            setItems(temp.sort((a, b) => a.id - b.id));
         }).catch((error) => {
             alert(error)
         });
     }, [props]);
 
     return (
-        <List
-            itemLayout="horizontal"
-            dataSource={items}
-            renderItem={item => (
-                <List.Item>
-                    <List.Item.Meta
-                        avatar={item.status ? <CheckCircleOutlined style={{color: "#52c41a"}}/> :
-                            <CloseCircleOutlined style={{color: "#c40d10"}}/>}
-                        title={<a href="https://ant.design">{item.id}</a>}
-                    />
-                </List.Item>
-            )}>
-        </List>
+        <>
+            <List
+                itemLayout="horizontal"
+                dataSource={items}
+                renderItem={item => (
+                    <List.Item
+                        actions={[<a key="">Изменить</a>, <a key="">Удалить</a>]}>
+                        <List.Item.Meta
+                            avatar={item.status ? <CheckCircleOutlined style={{color: "#52c41a"}}/> :
+                                <CloseCircleOutlined style={{color: "#c40d10"}}/>}
+                            title={item.id}
+                        />
+                    </List.Item>
+                )}>
+            </List>
+            <a style={{paddingLeft: "30px"}} href={""}>Добавить предмет</a>
+        </>
     )
 }

@@ -5,7 +5,7 @@ import LocationInfo from "./LocationInfo";
 import {CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined} from '@ant-design/icons';
 
 
-export default function StocktackingItems() {
+export default function ItemsStocktacking() {
     const {SubMenu} = Menu;
     const {Content, Sider} = Layout;
     const [locations, setLocations] = useState([]);
@@ -35,6 +35,7 @@ export default function StocktackingItems() {
 
     return (
         <Content style={{padding: '0 50px'}}>
+            <a>Закончить инвентаризацию</a>
             <Layout className="site-layout-background" style={{padding: '24px 0'}}>
                 <Sider className="site-layout-background" width={225}>
                     <Menu
@@ -59,6 +60,5 @@ export default function StocktackingItems() {
                 </Content>
             </Layout>
         </Content>
-
     )
 }
