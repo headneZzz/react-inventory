@@ -10,7 +10,7 @@ import {Layout} from "antd";
    4.  Не проверенные предметы
  */
 
-export default function ItemsReport() {
+export default function Report() {
     const {Content} = Layout;
     return (
         <Content style={{padding: '0 50px'}}>

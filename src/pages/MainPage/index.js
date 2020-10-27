@@ -1,17 +1,17 @@
 import React, {useState} from "react";
 import {Layout, Menu} from 'antd';
 import {AppstoreOutlined, TableOutlined, PieChartOutlined} from '@ant-design/icons';
-import ItemsTable from "./ItemsTable";
-import ItemsStocktacking from "./ItemsStocktacking";
-import {getUser} from "../utils/sessionUtils";
-import ItemsReport from "./ItemsReport";
+import Table from "./Table";
+import {getUser} from "../../utils/sessionUtils";
+import Report from "./Report";
+import Stocktacking from "./Stocktacking";
 
-function CurrentPage(props) {
+function CurrentContent(props) {
     if (props.page === "table")
-        return <ItemsTable user={getUser()}/>;
+        return <Table user={getUser()}/>;
     else if (props.page === "stocktaking")
-        return <ItemsStocktacking/>;
-    else return <ItemsReport/>
+        return <Stocktacking/>;
+    else return <Report/>
 }
 
 export default function MainPage() {
@@ -38,9 +38,9 @@ export default function MainPage() {
                 </Menu>
             </Header>
             <Layout style={{padding: '40px 50px'}}>
-                <CurrentPage page={page}/>
+                <CurrentContent page={page}/>
             </Layout>
-            <Footer style={{textAlign: 'center'}}></Footer>
+            <Footer style={{textAlign: 'center'}}>ГКУ РО "ГАРО"</Footer>
         </Layout>
     );
 }

@@ -1,9 +1,9 @@
 import React from 'react';
 import {BrowserRouter, Switch, Route} from 'react-router-dom';
-import LoginPage from "./components/LoginPage";
+import LoginPage from "./pages/LoginPage";
 import PrivateRoute from "./components/PrivateRoute";
-import UserTablePage from "./components/UserTablePage";
-import MainPage from "./components/MainPage";
+import UserTablePage from "./pages/UserTablePage";
+import MainPage from "./pages/MainPage";
 import 'antd/dist/antd.css';
 import './main.css';
 

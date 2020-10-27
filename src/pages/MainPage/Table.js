@@ -1,10 +1,10 @@
 import React from 'react';
 import MaterialTable from 'material-table';
-import localization from "../utils/localization";
-import firestore from "../firestore";
-import {exportCsv} from "../utils/tableUtils";
+import localization from "../../utils/localization";
+import firestore from "../../firestore";
+import {exportCsv} from "../../utils/tableUtils";
 
-export default class ItemsTable extends React.Component {
+export default class Table extends React.Component {
     db = firestore.firestore();
 
     componentDidMount() {

@@ -130,7 +130,7 @@ export default class UserTablePage extends React.Component {
     render() {
         return (
             <MaterialTable
-                title={'Кабинет '+this.state.user.location}
+                title={'Кабинет ' + this.state.user.location}
                 columns={this.state.columns}
                 data={this.state.data}
                 options={

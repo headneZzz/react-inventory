@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from 'react'
-import firestore from "../firestore";
+import firestore from "../../../firestore";
 import {List} from "antd";
 import {CheckCircleOutlined, CloseCircleOutlined} from '@ant-design/icons';
 
-export default function LocationInfo(props) {
+export function LocationInfo(props) {
     const [items, setItems] = useState([{}]);
 
     useEffect(() => {

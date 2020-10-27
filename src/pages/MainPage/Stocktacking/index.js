@@ -1,11 +1,11 @@
 import React, {useEffect, useState} from 'react'
 import {Layout, Menu} from 'antd';
-import firestore from "../firestore";
-import LocationInfo from "./LocationInfo";
+import firestore from "../../../firestore";
 import {CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined} from '@ant-design/icons';
+import {LocationInfo} from "./LocationInfo";
 
 
-export default function ItemsStocktacking() {
+export default function Stocktacking() {
     const {SubMenu} = Menu;
     const {Content, Sider} = Layout;
     const [locations, setLocations] = useState([]);
