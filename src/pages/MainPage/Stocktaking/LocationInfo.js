@@ -9,7 +9,7 @@ export function LocationInfo(props) {
     useEffect(() => {
         const db = firestore.firestore();
         const temp = [];
-        db.collection("2020").doc(props.location).get().then((doc) => {
+        db.collection("current").doc("stocktaking").collection(new Date().getFullYear().toString()).doc(props.location).get().then((doc) => {
             const itemsMap = doc.data().items;
             temp.push(...Object.entries(itemsMap).map(([id, status]) => {
                 return {id: id, status: status}
@@ -21,7 +21,7 @@ export function LocationInfo(props) {
     }, [props]);
 
     return (
-        <>
+        <div style={{background:"white"}}>
             <List
                 itemLayout="horizontal"
                 dataSource={items}
@@ -37,6 +37,6 @@ export function LocationInfo(props) {
                 )}>
             </List>
             <a style={{paddingLeft: "30px"}} href={""}>Добавить предмет</a>
-        </>
+        </div>
     )
 }
