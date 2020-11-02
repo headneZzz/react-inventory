@@ -1,8 +1,9 @@
 import React, {useEffect, useState} from 'react'
-import {Button, Layout, Menu, PageHeader, Popconfirm, Spin, message} from 'antd';
+import {Button, Layout, Menu, PageHeader, Popconfirm, Spin, message, Modal, Upload} from 'antd';
 import firestore from "../../../firestore";
 import {CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined} from '@ant-design/icons';
 import {LocationInfo} from "./LocationInfo";
+import InboxOutlined from "@ant-design/icons/es/icons/InboxOutlined";
 
 
 export default function Stocktaking() {
@@ -10,6 +11,7 @@ export default function Stocktaking() {
     const {Content, Sider} = Layout;
     const [locations, setLocations] = useState([]);
     const [isLoading, setLoading] = useState(true);
+    const [startStocktakingModalVisible, setStartStocktakingModalVisible] = useState(false);
     const [currentLocation, setCurrentLocation] = useState(-1);
     const [currentStocktaking, setCurrentStocktaking] = useState();
     const db = firestore.firestore();
@@ -34,6 +36,23 @@ export default function Stocktaking() {
         });
     }, [isLoading]);
 
+    const draggerProps = {
+        accept: ".csv",
+        name: 'file',
+        action: 'upload',
+        onChange(info) {
+            const {status} = info.file;
+            if (status !== 'uploading') {
+                console.log(info.file);
+            }
+            if (status === 'done') {
+                message.success(`файл ${info.file.name} успешно загружен.`);
+            } else if (status === 'error') {
+                message.error(`файл ${info.file.name} не загружен, произошла ошибка.`);
+            }
+        },
+    };
+
     const handleClick = e => {
         setCurrentLocation(e.key)
     };
@@ -52,35 +71,24 @@ export default function Stocktaking() {
             });
             const allLocations = items.map(value => value.location);
             allLocations
-                .filter((v, i, a) => a.indexOf(v) === i)
-                .forEach((location) => {
+                .filter((v, i, a) => a.indexOf(v) === i) //уникальные кабинеты
+                .forEach(location => {
                         const locationsItems = {};
                         items
                             .filter(item => item.location === location)
-                            .forEach(item => {
-                                if (locationsItems[item.id] == undefined) {
-                                    locationsItems[item.id] = false;
-                                }
-                            });
+                            .forEach(item => locationsItems[item.id] = false); //map всех предметов в кабинете
+                        db.collection("current")
+                            .doc("stocktaking")
+                            .collection(new Date().getFullYear().toString())
+                            .doc(location.toString())
+                            .set({items: locationsItems});
 
                         db.collection("locations")
                             .doc(location.toString())
                             .set({status: "NOT_CHECKED"});
-
-                        db.collection("current")
-                            .doc("stocktaking")
-                            .collection("2020")
-                            .doc(location.toString())
-                            .set({items: locationsItems});
                     }
                 );
-
-            db.collection("current")
-                .doc("stocktaking")
-                .collection("2020")
-                .doc("test")
-                .set({test: 0});
-
+            //год начала новой инвентаризации
             db.collection("current")
                 .doc("stocktaking")
                 .set({date: new Date().getFullYear()});
@@ -131,7 +139,8 @@ export default function Stocktaking() {
                         <Popconfirm
                             title="Вы уверены?"
                             onConfirm={stopStocktaking}
-                            onCancel={() => {}}
+                            onCancel={() => {
+                            }}
                             okText="Да"
                             cancelText="Нет"
                         >
@@ -140,11 +149,43 @@ export default function Stocktaking() {
                             </Button>
                         </Popconfirm>
                         :
-                        <Button key="1" type="primary" onClick={startStocktaking}>
-                            Начать инвентаризацию
-                        </Button>
+                        <>
+                            <Button key="1" type="primary" onClick={() => setStartStocktakingModalVisible(true)}>
+                                Начать инвентаризацию
+                            </Button>
+                            <Modal
+                                title="Начало инвентаризации"
+                                visible={startStocktakingModalVisible}
+                                onOk={startStocktaking}
+                                onCancel={() => setStartStocktakingModalVisible(false)}
+                                footer={[
+                                    <Button key="back" onClick={() => setStartStocktakingModalVisible(false)}>
+                                        Назад
+                                    </Button>,
+                                    <Button key="submit" type="primary" loading={isLoading} onClick={startStocktaking}>
+                                        Подтвердить
+                                    </Button>,
+                                ]}
+                            >
+                                <p>Перед началом загрузите данные из базы, если они есть. Данные должны быть в виде
+                                    таблицы в формате .csv со следующими колонками:
+                                    <ul>
+                                        <li>name - название предмета</li>
+                                        <li>id - инвентарник</li>
+                                        <li>purchaseDate - дата принятия к учету</li>
+                                    </ul>
+                                </p>
+                                <Upload.Dragger {...draggerProps}>
+                                    <p className="ant-upload-drag-icon">
+                                        <InboxOutlined/>
+                                    </p>
+                                    <p className="ant-upload-hint">Кликните или перетащите файл для загрузки</p>
+                                </Upload.Dragger>
+                            </Modal>
+                        </>
                     ]}
                 />
+
                 <Content className="site-layout-background" style={{padding: '0 24px', minHeight: 280}}>
                     {isLoading ? <div style={{textAlign: "center", paddingTop: 200}}><Spin size="large"/></div> :
                         currentLocation === -1 ?
