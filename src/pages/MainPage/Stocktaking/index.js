@@ -91,7 +91,7 @@ export default function Stocktaking() {
             //год начала новой инвентаризации
             db.collection("current")
                 .doc("stocktaking")
-                .set({date: new Date().getFullYear()});
+                .set({date: new Date().getFullYear().toString()});
         }).catch((error) => {
             alert(error)
         });
