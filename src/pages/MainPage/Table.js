@@ -46,14 +46,6 @@ export default class Table extends React.Component {
                 items.push({"id": doc.id, ...doc.data()})
             });
             this.setState({data: items});
-
-            console.log("Разница из старой таблицы");
-            console.log(items.filter(itemFromDb => !currentStock.map(value => value.id).includes(itemFromDb.id)).filter(value => value.working));
-            console.log("Разница из новой таблицы");
-            console.log(currentStock.filter(itemFromStock => !items.map(value => value.id).includes(itemFromStock.id)));
-            console.log("Общее");
-            console.log(items.filter(itemFromDb => currentStock.map(value => value.id).includes(itemFromDb.id)).filter(value => !value.working));
-            console.log(currentStock.length)
         }).catch((error) => {
             alert(error)
         });

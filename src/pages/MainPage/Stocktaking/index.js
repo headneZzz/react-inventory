@@ -46,9 +46,9 @@ export default function Stocktaking() {
                 console.log(info.file);
             }
             if (status === 'done') {
-                message.success(`файл ${info.file.name} успешно загружен.`);
+                message.success(`Файл ${info.file.name} успешно загружен.`);
             } else if (status === 'error') {
-                message.error(`файл ${info.file.name} не загружен, произошла ошибка.`);
+                message.error(`Файл ${info.file.name} не загружен, произошла ошибка.`);
             }
         },
     };
@@ -75,7 +75,7 @@ export default function Stocktaking() {
                 .forEach(location => {
                         const locationsItems = {};
                         items
-                            .filter(item => item.location === location)
+                            .filter(item => item.location === location && item.working)
                             .forEach(item => locationsItems[item.id] = false); //map всех предметов в кабинете
                         db.collection("current")
                             .doc("stocktaking")
@@ -163,11 +163,13 @@ export default function Stocktaking() {
                                         Назад
                                     </Button>,
                                     <Button key="submit" type="primary" loading={isLoading} onClick={startStocktaking}>
-                                        Подтвердить
+                                        Продолжить
                                     </Button>,
                                 ]}
                             >
-                                <p>Перед началом загрузите данные из базы, если они есть. Данные должны быть в виде
+                                <p>Перед началом загрузите данные из базы, если они есть. Если их нет, просто нажмите
+                                    "Продолжить", данные подгрузятся из старой базы. Загружаемые данные должны быть в
+                                    виде
                                     таблицы в формате .csv со следующими колонками:
                                     <ul>
                                         <li>name - название предмета</li>
@@ -186,7 +188,10 @@ export default function Stocktaking() {
                     ]}
                 />
 
-                <Content className="site-layout-background" style={{padding: '0 24px', minHeight: 280}}>
+                <Content className="site-layout-background" style={{
+                    padding: '0 24px',
+                    overflow: 'auto'
+                }}>
                     {isLoading ? <div style={{textAlign: "center", paddingTop: 200}}><Spin size="large"/></div> :
                         currentLocation === -1 ?
                             <div style={{textAlign: "center", paddingTop: 200}}>Выберите кабинет слева</div> :
