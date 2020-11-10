@@ -56,7 +56,7 @@ export default function Stocktaking() {
     };
 
     const handleClick = e => {
-        setCurrentLocation(e.key)
+        setCurrentLocation(parseInt(e.key))
     };
 
     const getMenuItemByLocationStatus = (status) =>
@@ -67,27 +67,23 @@ export default function Stocktaking() {
     const startStocktaking = () => {
         setLoading(true);
         db.collection("items").get().then((querySnapshot) => {
-            const items = [];
             querySnapshot.forEach(doc => {
-                items.push({"id": doc.id, ...doc.data()})
+                const itemData = doc.data();
+                itemData["found"] = false
+                db.collection("current")
+                    .doc("stocktaking")
+                    .collection(date.getMonth().toString() + "." + date.getFullYear().toString())
+                    .doc(doc.id)
+                    .set(itemData);
             });
-            locations.forEach(location => {
-                    const locationsItems = {};
-                    items
-                        .filter(item => item.location.toString() === location.id && item.working)
-                        .forEach(item => locationsItems[item.id] = false); //map всех предметов в кабинете
-                    db.collection("current")
-                        .doc("stocktaking")
-                        .collection(date.getMonth().toString() + "." + date.getFullYear().toString())
-                        .doc(location.id)
-                        .set({items: locationsItems});
 
+            locations.forEach(location => {
                     db.collection("locations")
                         .doc(location.id)
                         .set({status: "NOT_CHECKED"});
                 }
             );
-            //год начала новой инвентаризации
+            //месяц и год начала новой инвентаризации
             db.collection("current")
                 .doc("stocktaking")
                 .set({date: date.getMonth().toString() + "." + date.getFullYear().toString()});

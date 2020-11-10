@@ -2,7 +2,6 @@ import React, {useEffect, useState} from 'react'
 import firestore from "../../firestore";
 import {Button, Input, List, Modal, Popconfirm, message} from "antd";
 import {CheckCircleOutlined, CloseCircleOutlined} from '@ant-design/icons';
-import qrcode from "qrcode-generator";
 
 export function LocationInfo(props) {
     const [items, setItems] = useState([{}]);
@@ -10,107 +9,64 @@ export function LocationInfo(props) {
     const [newItemModalInput, setNewItemModalInput] = useState("");
 
     const [editItemModalVisible, setEditItemModalVisible] = useState(false);
-    const [editItemModalInput, setEditItemModalInput] = useState("");
+    const [editItemModalInput, setEditItemModalInput] = useState(props.location);
+    const [currentEditItemId, setCurrentEditItemId] = useState("");
 
-    const [currentEditItem, setCurrentEditItem] = useState({});
-    const [currentDeleteItemId, setCurrentDeleteItemId] = useState({});
+    const [currentDeleteItemId, setCurrentDeleteItemId] = useState("");
     const db = firestore.firestore();
 
     useEffect(() => {
         db.collection("current")
             .doc("stocktaking")
             .collection(props.currentStocktaking)
-            .doc(props.location)
+            .where("location", "==", props.location)
             .get()
-            .then((doc) => {
-                const itemsMap = doc.data().items;
-                const temp = [];
-                const newItems = [];
-                temp.push(...Object.entries(itemsMap).map(([id, status]) => {
-                    return {id: id, status: status}
-                }));
-                temp.sort((a, b) => a.id - b.id);
-                temp.forEach(item => {
-                    db.collection("items")
-                        .doc(item.id)
-                        .get()
-                        .then(newDoc => {
-                                const newItem = newDoc.data();
-                                newItem["id"] = item.id;
-                                newItem["status"] = item.status;
-                                newItems.push(newItem);
-                                console.log(props.location);
-                                console.log(newItem)
-                            }
-                        );
+            .then((querySnapshot) => {
+                const temp = []
+                querySnapshot.forEach((doc) => {
+                    temp.push({"id": doc.id, ...doc.data()})
                 });
-                //FIXME
-                setItems(newItems);
+                setItems(temp.sort((a, b) => a.id - b.id))
             })
-            .catch((error) => {
-                alert(error)
-            });
+            .catch((error) => message.error("Ошибка" + error));
     }, [props]);
 
     const addItemInCurrentLocation = () => {
-        const newItems = {};
-        items.forEach(item => newItems[item.id] = item.status);
-        newItems[newItemModalInput] = false;
         db.collection("current")
             .doc("stocktaking")
             .collection(props.currentStocktaking)
-            .doc(props.location)
+            .doc(newItemModalInput)
             .update({
-                items: newItems
+                location: props.location
             })
             .then(() => {
-                setItems(prevState => [...prevState, {id: newItemModalInput, status: false}]);
+                setItems(prevState => [...prevState, {id: newItemModalInput, status: false}])
                 setNewItemModalVisible(false)
             })
-            .catch((error) => message("Ошибка" + error));
+            .catch((error) => message.error("Ошибка" + error));
     };
 
     const saveItemChanges = () => {
-        message.info("Сохранение еще не работает")
-    };
-
-    const deleteItemFromCurrentLocation = () => {
-        const newItems = {};
-        items.forEach(item => {
-            newItems[item.id] = item.status
-        });
-        delete newItems[currentDeleteItemId];
         db.collection("current")
             .doc("stocktaking")
             .collection(props.currentStocktaking)
-            .doc(props.location)
-            .update({
-                items: newItems
-            })
+            .doc(currentEditItemId)
+            .update({location: parseInt(editItemModalInput)})
             .then(() => {
-                let itemsInZeroLocation;
-                db.collection("current")
-                    .doc("stocktaking")
-                    .collection(props.currentStocktaking)
-                    .doc(props.location)
-                    .get()
-                    .then((doc) => {
-                        itemsInZeroLocation = doc.data().items;
-                        itemsInZeroLocation[currentDeleteItemId] = false;
-                        db.collection("current")
-                            .doc("stocktaking")
-                            .collection(props.currentStocktaking)
-                            .doc("0")
-                            .update({
-                                items: itemsInZeroLocation
-                            })
-                            .then(() => {
-                                    setItems(prevState => prevState.filter(item => item.id !== currentDeleteItemId))
-                                }
-                            );
-                    });
+                setItems(prevState => prevState.filter(item => item.id !== currentEditItemId))
+                setEditItemModalVisible(false)
             })
-            .catch((error) => message("Ошибка" + error));
+            .catch((error) => message.error("Ошибка: " + error));
+    };
+
+    const deleteItemFromCurrentLocation = () => {
+        db.collection("current")
+            .doc("stocktaking")
+            .collection(props.currentStocktaking)
+            .doc(currentDeleteItemId)
+            .update({location: 0})
+            .then(() => setItems(prevState => prevState.filter(item => item.id !== currentDeleteItemId)))
+            .catch((error) => message.error("Ошибка: " + error));
     };
 
     return (
@@ -122,7 +78,7 @@ export function LocationInfo(props) {
                     <List.Item
                         actions={[
                             <a key={item.id} onClick={() => {
-                                setCurrentEditItem(item);
+                                setCurrentEditItemId(item.id);
                                 setEditItemModalVisible(true)
                             }}>
                                 Перенести
@@ -155,7 +111,7 @@ export function LocationInfo(props) {
                 )}>
             </List>
             <Modal
-                title={currentEditItem.id}
+                title={currentEditItemId}
                 visible={editItemModalVisible}
                 onOk={saveItemChanges}
                 onCancel={() => setEditItemModalVisible(false)}
@@ -169,7 +125,7 @@ export function LocationInfo(props) {
                 ]}
             >
                 <label>Кабинет</label>
-                <Input value={props.location}/>
+                <Input value={editItemModalInput} onChange={(e) => setEditItemModalInput(e.target.value)}/>
             </Modal>
 
             <a style={{paddingLeft: "30px"}} onClick={() => setNewItemModalVisible(true)}>Добавить предмет</a>
