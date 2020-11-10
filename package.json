@@ -22,7 +22,8 @@
     "path": "^0.12.7",
     "connect-busboy": "^0.0.2",
     "csv-parser": "^2.3.3",
-    "firebase-admin": "^9.3.0"
+    "firebase-admin": "^9.3.0",
+    "qrcode-generator": "^1.4.4"
   },
   "scripts": {
     "start": "node server.js",

@@ -1,9 +1,10 @@
 import React from 'react';
-import {BrowserRouter, Switch, Route} from 'react-router-dom';
-import LoginPage from "./pages/LoginPage";
+import {BrowserRouter, Switch, Route, Redirect} from 'react-router-dom';
+import LoginPage from "./pages/login";
 import PrivateRoute from "./components/PrivateRoute";
-import UserTablePage from "./pages/UserTablePage";
-import MainPage from "./pages/MainPage";
+import Stocktaking from "./pages/stocktaking";
+import QRCodes from "./pages/qr-codes";
+import Items from "./pages/items";
 import 'antd/dist/antd.css';
 import './main.css';
 
@@ -12,8 +13,10 @@ export default function App() {
         <BrowserRouter>
             <Switch>
                 <Route exact path="/login" component={LoginPage}/>
-                <PrivateRoute path="/" component={MainPage}/>
-                <PrivateRoute path="/user" component={UserTablePage}/>
+                <PrivateRoute path="/stocktaking" component={Stocktaking}/>
+                <PrivateRoute path="/items" component={Items}/>
+                <PrivateRoute path="/qr-codes" component={QRCodes}/>
+                <Redirect from="/" to="/stocktaking"/>
             </Switch>
         </BrowserRouter>
     );

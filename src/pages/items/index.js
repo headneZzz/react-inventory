@@ -3,9 +3,10 @@ import MaterialTable from 'material-table';
 import localization from "../../utils/localization";
 import firestore from "../../firestore";
 import {exportCsv} from "../../utils/tableUtils";
-import currentStock from "../../currentStock";
+import {Layout} from "antd";
+import Header from "../../components/Header";
 
-export default class Table extends React.Component {
+export default class Items extends React.Component {
     db = firestore.firestore();
 
     componentDidMount() {
@@ -174,33 +175,38 @@ export default class Table extends React.Component {
 
     render() {
         return (
-            <MaterialTable
-                title="Предметы"
-                columns={this.state.columns}
-                data={this.state.data}
-                options={
-                    {
-                        pageSize: 5,
-                        addRowPosition: "first",
-                        filtering: true,
-                        exportButton: true,
-                        exportAllData: true,
-                        exportCsv: (columns, renderData) => exportCsv(),
-                        exportPdf: () => {
-                            alert("В разработке")
-                        }
+            <Layout className="wrapper">
+                <Header selected={"items"}/>
 
+                <MaterialTable
+                    title="Предметы"
+                    columns={this.state.columns}
+                    data={this.state.data}
+                    options={
+                        {
+                            pageSize: 5,
+                            addRowPosition: "first",
+                            filtering: true,
+                            exportButton: true,
+                            exportAllData: true,
+                            exportCsv: (columns, renderData) => exportCsv(),
+                            exportPdf: () => {
+                                alert("В разработке")
+                            }
+
+                        }}
+                    editable={{
+                        onRowAdd: (newData) => this.rowAdd(newData),
+                        onRowUpdate: (newData, oldData) => this.rowUpdate(newData, oldData),
+                        onRowDelete: (oldData) => this.rowDelete(oldData)
                     }}
-                editable={{
-                    onRowAdd: (newData) => this.rowAdd(newData),
-                    onRowUpdate: (newData, oldData) => this.rowUpdate(newData, oldData),
-                    onRowDelete: (oldData) => this.rowDelete(oldData)
-                }}
-                detailPanel={this.rowHistory}
-                localization={
-                    localization
-                }
-            />
+                    detailPanel={this.rowHistory}
+                    localization={
+                        localization
+                    }
+                />
+                <Layout.Footer style={{textAlign: 'center'}}>ГКУ РО "ГАРО"</Layout.Footer>
+            </Layout>
         );
     }
 }

@@ -1,6 +1,6 @@
 import React from "react";
-import firestore from "../firestore";
-import {setUserSession} from "../utils/sessionUtils";
+import firestore from "../../firestore";
+import {setUserSession} from "../../utils/sessionUtils";
 import {Form, Input, Button} from 'antd';
 import {UserOutlined, LockOutlined} from '@ant-design/icons';
 
@@ -13,7 +13,7 @@ export default class LoginPage extends React.Component {
                 if (doc.data().password === values.password) {
                     const user = {"name": doc.id, ...doc.data()};
                     setUserSession(user);
-                    user.type === "admin" ? this.props.history.push('/') : this.props.history.push('/user')
+                    user.type === "admin" ? this.props.history.push('/stocktaking') : this.props.history.push('/user')
                 }
             }
         }).catch((error) => {
