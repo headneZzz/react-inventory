@@ -5,6 +5,7 @@ import {CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined} from '@ant
 import {LocationInfo} from "./LocationInfo";
 import InboxOutlined from "@ant-design/icons/es/icons/InboxOutlined";
 import Header from "../../components/Header";
+import translit from "../../utils/translit"
 
 
 export default function Stocktaking() {
@@ -36,7 +37,7 @@ export default function Stocktaking() {
         ).catch((error) => {
             alert(error)
         });
-    }, [isLoading]);
+    }, [isLoading, db]);
 
     const draggerProps = {
         accept: ".csv",
@@ -65,7 +66,6 @@ export default function Stocktaking() {
             .map(location => <Menu.Item key={location.id}>{`Кабинет ${location.id}`}</Menu.Item>);
 
     const startStocktaking = () => {
-        setLoading(true);
         db.collection("items").get().then((querySnapshot) => {
             querySnapshot.forEach(doc => {
                 const itemData = doc.data();
@@ -87,17 +87,36 @@ export default function Stocktaking() {
             db.collection("current")
                 .doc("stocktaking")
                 .set({date: date.getMonth().toString() + "." + date.getFullYear().toString()});
+            setLoading(true);
+            message.success('Инвентаризация начата');
         }).catch((error) => {
             alert(error)
         });
-        message.success('Инвентаризация начата');
     };
 
     const stopStocktaking = () => {
-        setLoading(true);
         db.collection("current")
             .doc("stocktaking")
-            .set({date: ""});
+            .collection(date.getMonth().toString() + "." + date.getFullYear().toString())
+            .get()
+            .then(querySnapshot => {
+                querySnapshot.forEach((doc) => {
+                    db.collection("items")
+                        .doc(doc.id)
+                        .update({
+                            location: doc.data().location,
+                            history: doc.data().history
+                        })
+                });
+                db.collection("current")
+                    .doc("stocktaking")
+                    .set({date: ""});
+                message.success('Инвентаризация окончена');
+                setLoading(true);
+            })
+            .catch((error) => {
+                alert(error)
+            });
     };
 
     return (

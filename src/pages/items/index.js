@@ -5,6 +5,7 @@ import firestore from "../../firestore";
 import {exportCsv} from "../../utils/tableUtils";
 import {Layout} from "antd";
 import Header from "../../components/Header";
+import {getUser} from "../../utils/sessionUtils";
 
 export default class Items extends React.Component {
     db = firestore.firestore();
@@ -36,7 +37,7 @@ export default class Items extends React.Component {
                 {title: 'Состояние', field: 'working', type: 'boolean'},
             ],
             data: [],
-            user: props.user
+            user: getUser()
         }
     }
 
