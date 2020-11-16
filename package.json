@@ -23,7 +23,8 @@
     "connect-busboy": "^0.0.2",
     "csv-parser": "^2.3.3",
     "firebase-admin": "^9.3.0",
-    "qrcode-generator": "^1.4.4"
+    "qrcode-generator": "^1.4.4",
+    "qrcode": "^1.4.4"
   },
   "scripts": {
     "start": "node server.js",
