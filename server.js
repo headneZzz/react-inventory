@@ -50,7 +50,9 @@ app.post("/upload", function (req, res) {
                                     });
                                 //Добавляем новые данные, которых не было
                                 itemsFromFile
-                                    .filter(itemFromFile => !itemsFromDb.map(value => value.id).includes(itemFromFile.id))
+                                    .filter(itemFromFile => !itemsFromDb
+                                        .map(value => value.id)
+                                        .includes(itemFromFile.id))
                                     .forEach(item => {
                                         db.collection("items").doc(item.id).set({
                                             history: [],
@@ -62,11 +64,18 @@ app.post("/upload", function (req, res) {
                                         })
                                     });
                                 //Если совпало
-                                itemsFromDb.filter(itemFromDb => itemsFromFile.map(value => value.id).includes(itemFromDb.id)).forEach(item => {
-                                    db.collection("items").doc(item.id).update({
-                                        working: true
-                                    })
-                                });
+                                itemsFromFile
+                                    .filter(itemFromFile => itemsFromDb
+                                        .map(value => value.id)
+                                        .includes(itemFromFile.id))
+                                    .forEach(item => {
+                                        db.collection("items").doc(item.id).update({
+                                            working: true,
+                                            name: item.name,
+                                            type: utils.getTypeFromName(item.name),
+                                            purchaseDate: item.purchaseDate
+                                        })
+                                    });
                                 res.send({status: 'done'})
                             })
                     });

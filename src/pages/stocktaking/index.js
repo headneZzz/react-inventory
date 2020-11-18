@@ -5,8 +5,6 @@ import {CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined} from '@ant
 import {LocationInfo} from "./LocationInfo";
 import InboxOutlined from "@ant-design/icons/es/icons/InboxOutlined";
 import Header from "../../components/Header";
-import translit from "../../utils/translit"
-
 
 export default function Stocktaking() {
     const {SubMenu} = Menu;

@@ -1,7 +1,7 @@
 import React from "react";
 import firestore from "../../firestore";
 import {setUserSession} from "../../utils/sessionUtils";
-import {Form, Input, Button} from 'antd';
+import {Form, Input, Button, message} from 'antd';
 import {UserOutlined, LockOutlined} from '@ant-design/icons';
 
 export default class LoginPage extends React.Component {
@@ -15,6 +15,12 @@ export default class LoginPage extends React.Component {
                     setUserSession(user);
                     user.type === "admin" ? this.props.history.push('/stocktaking') : this.props.history.push('/user')
                 }
+                else {
+                    message.error('Неверный пароль');
+                }
+            }
+            else {
+                message.error('Неверное имя');
             }
         }).catch((error) => {
             alert(error)

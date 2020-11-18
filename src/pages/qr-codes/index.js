@@ -27,13 +27,7 @@ const QRCodes = () => {
                             if (error) console.error(error)
                             console.log('success!');
                         })
-                        // const typeNumber = 0;
-                        // const errorCorrectionLevel = 'Q';
-                        // const data = item.id;
-                        // const qr = qrcode(typeNumber, errorCorrectionLevel);
-                        // qr.addData(data);
-                        // qr.make();
-                        // document.getElementById(item.id).innerHTML = qr.createImgTag(4);
+
                     })
                 }
             );

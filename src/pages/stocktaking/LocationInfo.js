@@ -68,7 +68,7 @@ export function LocationInfo(props) {
             .then(() => setItems(prevState => prevState.filter(item => item.id !== currentDeleteItemId)))
             .catch((error) => message.error("Ошибка: " + error));
     };
-
+    console.log(items)
     return (
         <>
             <List
@@ -100,7 +100,7 @@ export function LocationInfo(props) {
 
                         ]}>
                         <List.Item.Meta
-                            avatar={item.status ? <CheckCircleOutlined style={{color: "#52c41a"}}/> :
+                            avatar={item.found ? <CheckCircleOutlined style={{color: "#52c41a"}}/> :
                                 <CloseCircleOutlined style={{color: "#c40d10"}}/>}
                             title={item.id}
                             description={item.name}
