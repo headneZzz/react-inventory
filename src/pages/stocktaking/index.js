@@ -95,16 +95,25 @@ export default function Stocktaking() {
     const stopStocktaking = () => {
         db.collection("current")
             .doc("stocktaking")
-            .collection(date.getMonth().toString() + "." + date.getFullYear().toString())
+            .collection(currentStocktaking)
             .get()
             .then(querySnapshot => {
                 querySnapshot.forEach((doc) => {
-                    db.collection("items")
-                        .doc(doc.id)
-                        .update({
-                            location: doc.data().location,
-                            history: doc.data().history
-                        })
+                    if (doc.data().found) {
+                        db.collection("items")
+                            .doc(doc.id)
+                            .update({
+                                location: doc.data().location,
+                                history: doc.data().history
+                            })
+                    } else {
+                        db.collection("items")
+                            .doc(doc.id)
+                            .update({
+                                location: 0,
+                                history: doc.data().history
+                            })
+                    }
                 });
                 db.collection("current")
                     .doc("stocktaking")

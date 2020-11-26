@@ -102,7 +102,7 @@ export function LocationInfo(props) {
                         <List.Item.Meta
                             avatar={item.found ? <CheckCircleOutlined style={{color: "#52c41a"}}/> :
                                 <CloseCircleOutlined style={{color: "#c40d10"}}/>}
-                            title={item.id}
+                            title={item.id?.concat(item.working ? ' Работает' : ' Списан')}
                             description={item.name}
                         />
 

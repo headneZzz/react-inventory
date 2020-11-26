@@ -1,7 +1,8 @@
 module.exports.translit = String.prototype.translit = String.prototype.translit || function () {
     let Chars = {
             'm': 'м',
-            'M': 'М'
+            'M': 'М',
+            '/': '-'
         },
         t = this;
     for (let i in Chars) {

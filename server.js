@@ -36,16 +36,34 @@ app.post("/upload", function (req, res) {
                             .on('data', (row) => itemsFromFile.push(row))
                             .on('end', () => {
                                 //Все id приводим в порядок
-                                itemsFromFile.forEach(item => item.id = item.id.trim().translit().toUpperCase());
+                                itemsFromFile.forEach(item => {
+                                    item.id = item.id.trim().translit().toUpperCase()
+                                    if (item.name.includes("Компьютер в комплекте")) {
+                                        const newItemMonitor = item
+                                        newItemMonitor.id += "-2"
+                                        newItemMonitor.name = "Монитор из комплекта"
+                                        itemsFromFile.push(newItemMonitor);
+                                        item.id = item.id + "-1"
+                                    }
+                                });
                                 //Не найденные старые даннные, которые работают, делаем списанными
+                                // itemsFromDb
+                                //     .filter(itemFromDb => !itemsFromFile
+                                //         .map(value => value.id)
+                                //         .includes(itemFromDb.id))
+                                //     .filter(value => value.working)
+                                //     .forEach(item => {
+                                //         db.collection("items").doc(item.id).update({
+                                //             working: false
+                                //         })
+                                //     });
+                                //Найденные старые даннные, которые списанные, делаем рабочими
                                 itemsFromDb
-                                    .filter(itemFromDb => !itemsFromFile
-                                        .map(value => value.id)
-                                        .includes(itemFromDb.id))
-                                    .filter(value => value.working)
+                                    .filter(itemFromDb => itemsFromFile.map(value => value.id).includes(itemFromDb.id))
+                                    .filter(value => !value.working)
                                     .forEach(item => {
                                         db.collection("items").doc(item.id).update({
-                                            working: false
+                                            working: true
                                         })
                                     });
                                 //Добавляем новые данные, которых не было
